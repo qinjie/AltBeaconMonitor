@@ -1,3 +1,15 @@
 <resources>
-    <string name="app_name">BeaconMonitor</string>
+    <string name="app_name">Beacon Monitor</string>
+    <string-array name="beacon_list">
+        <item>locate_app:2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6::</item>
+        <item>ece_0002:B9407F30-F5F8-466E-AFF9-25556B57FE6D:3810:48523</item>
+        <item>ece_0009:B9407F30-F5F8-466E-AFF9-25556B57FE6D:16717:179</item>
+        <item>ece_0003:B9407F30-F5F8-466E-AFF9-25556B57FE6D:52689:51570</item>
+        <item>ece_0005:B9407F30-F5F8-466E-AFF9-25556B57FE6D:58949:29933</item>
+        <item>ece_0006:B9407F30-F5F8-466E-AFF9-25556B57FE6D:24890:6699</item>
+        <item>ece_0004:B9407F30-F5F8-466E-AFF9-25556B57FE6D:23254:34430</item>
+        <item>ece_0001:B9407F30-F5F8-466E-AFF9-25556B57FE6D:43561:20592</item>
+        <item>ece_0008:B9407F30-F5F8-466E-AFF9-25556B57FE6D:10888:43874</item>
+        <item>ece_0007:B9407F30-F5F8-466E-AFF9-25556B57FE6D:33078:31465</item>
+    </string-array>
 </resources>

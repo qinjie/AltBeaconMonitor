@@ -19,6 +19,7 @@ import java.util.ArrayList;
 
 public class MyApplication extends Application implements BootstrapNotifier {
     private static final String TAG = MyApplication.class.getSimpleName();
+
     private BackgroundPowerSaver backgroundPowerSaver;
     private RegionBootstrap regionBootstrap;
 
@@ -27,22 +28,25 @@ public class MyApplication extends Application implements BootstrapNotifier {
         Log.d(TAG, "onCreate()");
         super.onCreate();
 
-        backgroundPowerSaver = new BackgroundPowerSaver(this);
+        // Configure BeaconManager which is a singleton
         BeaconManager beaconManager = BeaconManager.getInstanceForApplication(this);
         beaconManager.setBackgroundBetweenScanPeriod(0l);
         beaconManager.setBackgroundScanPeriod(1100l);
         beaconManager.setBackgroundMode(true);
         beaconManager.setRegionStatePeristenceEnabled(false);
 
-        // To detect proprietary beacons, you must add a line like below corresponding to your beacon
-        // type.  Do a web search for "setBeaconLayout" to get the proper expression.
+        // By default the AndroidBeaconLibrary will only find AltBeacons.
+        // To find a different type of beacon, specify the byte layout for that beacon's advertisement.
         beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(BleUtil.LAYOUT_IBEACON));
 
-        // wake up the app when any beacon is seen (you can specify specific id filers in the parameters below)
-        Region region = new Region("AnyBeacon", null, null, null);
         ArrayList regionList = new ArrayList<Region>();
-        regionList.add(region);
+        // Wake up the app when any beacon is seen
+//        Region region = new Region("AnyBeacon", null, null, null);
+//        regionList.add(region);
         regionBootstrap = new RegionBootstrap(this, regionList);
+
+        // Automatically cause the BeaconLibrary to save battery whenever the application is not visible.
+        backgroundPowerSaver = new BackgroundPowerSaver(this);
 
     }
 
@@ -64,16 +68,29 @@ public class MyApplication extends Application implements BootstrapNotifier {
 //        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 //        this.startActivity(intent);
 
-        Intent intent = new Intent(this, BeaconConsumingService.class);
-        this.startService(intent);
+        // Check if service is running in background
+        Boolean status = Utils.isServiceRunning(
+                this.getApplicationContext(),
+                BeaconMonitoringService.class);
+
+        if (!status) {
+            Intent intent = new Intent(this, BeaconMonitoringService.class);
+            this.startService(intent);
+        }
     }
 
     @Override
     public void didExitRegion(Region region) {
         Log.d(TAG, "didExitRegion(): " + region.getUniqueId());
 
-        Intent intent = new Intent(this, BeaconConsumingService.class);
-        this.startService(intent);
+        // Check if service is running in background
+        Boolean status = Utils.isServiceRunning(
+                this.getApplicationContext(),
+                BeaconMonitoringService.class);
 
+        if (!status) {
+            Intent intent = new Intent(this, BeaconMonitoringService.class);
+            this.startService(intent);
+        }
     }
 }

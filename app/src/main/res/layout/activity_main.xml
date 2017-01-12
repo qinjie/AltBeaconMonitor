@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
@@ -11,8 +12,26 @@
     tools:context="edu.np.ece.beaconmonitor.MainActivity">
 
     <TextView
+        android:id="@+id/tvModel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="Phone Model" />
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20sp"
+        android:layout_marginTop="20sp"
+        android:gravity="center"
         android:text="Hello World!"
-        android:id="@+id/textView"/>
-</RelativeLayout>
+        android:textSize="18sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"
+        android:layout_weight="1"
+        android:text="If your service is not running...\nFor some Android phones, e.g. Xiaomi, user has to manually enable auto-start for this app. Follow the steps below:\n1. Tap on the Security app from the app screen. \n 2. Once in the Security app, tap on Permissions. \n 3. Tap on Autostart. \n 4. Enable Autostart for this app. \n 5. Reboot your phone." />
+
+</LinearLayout>

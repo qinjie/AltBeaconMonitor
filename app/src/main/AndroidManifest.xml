@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="edu.np.ece.beaconmonitor">
+    package="edu.np.ece.beaconmonitor"
+    android:installLocation="internalOnly">
 
     <uses-feature android:name="android.hardware.bluetooth" />
 
@@ -8,6 +9,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:name=".MyApplication"
@@ -23,37 +27,28 @@
             android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".BeaconConsumingService"
-            android:enabled="true" />
-
         <receiver
-            android:name=".BootReceiver"
+            android:name=".BootCompletedReceiver"
             android:enabled="true"
             android:exported="true"
             android:label="RestartServiceWhenStopped">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="edu.np.beaconmonitor.RestartService" />
+            </intent-filter>
+        </receiver>
 
-                <category android:name="android.intent.category.HOME" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="uk.ac.shef.oak.ActivityRecognition.RestartSensor" />
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".ToastMakerReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="edu.np.ece.beaconmonitor.toast" />
-            </intent-filter>
-        </receiver>
+        <service
+            android:name=".BeaconMonitoringService"
+            android:enabled="true" />
+
     </application>
 
 </manifest>

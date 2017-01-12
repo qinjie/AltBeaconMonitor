@@ -9,11 +9,13 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
+
+import java.util.List;
 
 /**
  * Created by zqi2 on 17/12/16.
@@ -21,16 +23,14 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
-    private Context context;
-
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
-//    private BeaconManager beaconManager;
-
-    Intent mServiceIntent;
-    private BeaconConsumingService mSensorService;
-
+    private static final int REQUEST_CODE_PERMISSIONS = 123;
+    private static final String MANUFACTURER_XIAOMI = "Xiaomi";
     private static final String REGION_NAME = "TestBeacon";
     private static final String REGION_UUID = "2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6";
+    Intent mServiceIntent;
+    private Context context;
+    private BeaconMonitoringService mSensorService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,39 +38,47 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         context = this;
 
-        mSensorService = new BeaconConsumingService();
-        mServiceIntent = new Intent(context, mSensorService.getClass());
-        if (!isMyServiceRunning(mSensorService.getClass())) {
-            startService(mServiceIntent);
-        }
-
-//        beaconManager = BeaconManager.getInstanceForApplication(this);
-//        beaconManager.bind(this);
-        checkPermissions();
-    }
-
-    private boolean isMyServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                Log.i ("isMyServiceRunning?", true+"");
-                return true;
+//        mSensorService = new BeaconMonitoringService();
+//        mServiceIntent = new Intent(context, mSensorService.getClass());
+//        if (!isMyServiceRunning(mSensorService.getClass())) {
+//            startService(mServiceIntent);
+//        }
+//
+//        checkPermissions();
+        // Check for required permissions
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            String[] PERMISSIONS = {
+                    // Add permission here
+                    // No need to add RECEIVE_BOOT_COMPLETED because it is normal permission
+                    // https://unionassets.com/android-native-plugin/runtime-permissions-511
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+            };
+            if (!hasPermissions(this, PERMISSIONS)) {
+                ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_CODE_PERMISSIONS);
             }
         }
-        Log.i ("isMyServiceRunning?", false+"");
-        return false;
+
+        // Check phone manufacturer
+        // If it is XiaoMi phone, guide user to manually grant Auto Start permission
+        Log.i(TAG, "Manufacturer = " + Build.MANUFACTURER);
+        Log.i(TAG, "Model = " + Build.MODEL);
+        ((TextView) findViewById(R.id.tvModel)).setText(Build.MANUFACTURER + " - " + Build.MODEL);
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (this.getIntent() != null) {
-            String message = this.getIntent().getStringExtra("message");
-            if (message != null) {
-                TextView textView = (TextView) this.findViewById(R.id.textView);
-                textView.setText(message);
-            }
-        }
+
+        // Start service upon running of MainActivity
+        Intent intent = new Intent(this, BeaconMonitoringService.class);
+        this.startService(intent);
+
+        // Check if service is running in background
+        Boolean isServiceRunning = isServiceRunning(
+                MainActivity.this.getApplicationContext(),
+                BeaconMonitoringService.class);
+        ((TextView) findViewById(R.id.tvStatus)).setText("Service is " + (isServiceRunning ? "running" : "NOT running"));
     }
 
     @Override
@@ -81,25 +89,25 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private void checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Android M Permission check?
-            if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("This app needs location access");
-                builder.setMessage("Please grant location access so this app can detect beacons.");
-                builder.setPositiveButton(android.R.string.ok, null);
-                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    @RequiresApi(api = Build.VERSION_CODES.M)
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
-                    }
-                });
-                builder.show();
-            }
-        }
-    }
+//    private void checkPermissions() {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            // Android M Permission check?
+//            if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//                builder.setTitle("This app needs location access");
+//                builder.setMessage("Please grant location access so this app can detect beacons.");
+//                builder.setPositiveButton(android.R.string.ok, null);
+//                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+//                    @RequiresApi(api = Build.VERSION_CODES.M)
+//                    @Override
+//                    public void onDismiss(DialogInterface dialog) {
+//                        requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
+//                    }
+//                });
+//                builder.show();
+//            }
+//        }
+//    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -122,6 +130,31 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
         }
+    }
+
+    public boolean hasPermissions(Context context, String... permissions) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean isServiceRunning(Context context, Class<?> serviceClass) {
+        final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        final List<ActivityManager.RunningServiceInfo> services = activityManager.getRunningServices(Integer.MAX_VALUE);
+
+        for (ActivityManager.RunningServiceInfo runningServiceInfo : services) {
+            Log.d(TAG, String.format("Service:%s", runningServiceInfo.service.getClassName()));
+            if (runningServiceInfo.service.getClassName().equals(serviceClass.getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 //    @Override

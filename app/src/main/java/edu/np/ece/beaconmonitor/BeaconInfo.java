@@ -6,7 +6,7 @@ import java.io.Serializable;
  * Created by zqi2 on 18/12/16.
  */
 
-public class BeaconInfo implements Serializable{
+public class BeaconInfo implements Serializable {
 
     String name;
     String uuid;
